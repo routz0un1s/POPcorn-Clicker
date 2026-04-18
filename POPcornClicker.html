@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset = "UTF-8">
+<title>Popcorn Clicker</title>
+
+<link href = "https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<style>
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: "Press Start 2P", cursive;
+
+    /*WHITE BACKGROUND*/
+    background: white;
+    color: black;
+}
+
+/*SCREENS*/
+.screen {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: none;
+    justify-content:center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+
+    background: white;
+
+}
+
+.active {display: flex;}
+
+h1, h2, p, div, span {
+    color: black;
+}
+
+/*BUTTONS*/
+
+button {
+    padding: 10px;
+    margin: 6px;
+    font-family: inherit;
+    color: black;
+    border: 3px solid black;
+    cursor: pointer;
+}
+
+/*UI*/
+#gameUI {position: absolute; top: 15px; left: 15px;}
+#balanceUI { position: absolute; top: 50px; left: 15px;}
+#comboUI {position: absolute; top: 85px; left: 15px;}
+#controls { position: absolute; top: 15px; right: 15px;}
+
+#machine {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 220px;
+    height: 220px;
+    background: repeating-linear-gradient(90deg, red, red 20px, white 20px, white 40px);
+    border-top-right-radius: 120px;
+}
+
+/*HITBOX*/
+.kernel {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+}
+
+.kernel::after {
+    content: "";
+    position: absolute;
+    width: 45px;
+    height: 45px;
+    top: 17.5px;
+    left: 17.5px;
+    border-radius: 50%;
+}
+
+/*UPGRADEABLE SKINS*/
+.classic::after { background: #f5e6b3;}
+.butter::after {background: #ffd84d;}
+.caramel::after{ background: #b5651d;}
+.cheese::after { background: #ff9900;}
+.barbecue::after { background: #800000}
+.chocolate::after { background: #3b1f0b;}
+.cotton_candy::after { background: radial-gradient(circle, cyan, pink)}
+.radioactive::after { background: #39ff14}  
+.galaxy::after { background: radial-gradient (circle, purple, black); }
+
+
+/*ΒURNT KERNEL*/
+.burnt::after {
+    background: black;
+    box-shadow: 0 0 10px red, 0 0 20px red;
+    border: 2px solid red;
+}
+
+/*GOLD KERNEL - SPECIAL*/
+.gold::after {
+    background: gold;
+    box-shadow: 0 0 15px orange;
+}
+
+/*HOW YOU LOSE*/
+#lose {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: white;
+    color: black;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+</style>
+</head>   
+
+<body>
+<!--STARTING MENU / HOMEPAGE-->
+<div id="menu" class="screen active">
+    <h1>POPcorn Clicker</h1>
+    <div>Coins: <span id="menuCoins">0</span></div>
+</div>
+
+<!--INFO-->
+<div id="info" class="screen">
+    <h2>HOW TO PLAY</h2>
+    <p>
+        WELCOME TO POPCORN CLICKER! <br><br>
+        
+        Click the popcorn kernels flying out of the machine to score points.<br><br>
+        
+        Each kernel is worth 5 points. <br><br>
+
+        DON'T CLICK the Burnt kernels, or else you'll instantly lose! <br><br>
+
+        Combo: 2 correct clicks in a row -> 2x multiplier <br>
+        Missing following clicks resets combo<br><br>
+
+        The rare Gold kernels are worth 15 points. <br><br>
+
+        Have fun! <br><br>
+    </p>
+    <button onclick="goHome()">Back</button>
+</div>
+<!--SHOP / UPGRADING SECTION-->
+<div id="shop" class="screen">
+    <h2>SHOP</h2>
+    <div>Coins total: <span id="shopCoins">0</span></div>
+    <div id="shopItems"></div>
+    <button onclick="goHome()">Back</button>
+</div>
+<!--GAME INTERFACE-->
+<div id="game" class="screen">
+    <div id="gameUI">Score: <span id="score">0</span></div>
+    <div id="balanceUI">Coins total:<span id="coins"></spanid></div>
+    <div id="comboUI">Combo: x1</div>
+    
+    <div id="controls">
+        <button onclick="togglePause()">Pause</button>
+        <button onclick="goHome()">Home</button>
+        <button onclick="information()">Rules</button>
+    </div>
+
+    <div id="machine"></div>
+</div>
+<!--LOSING INSTANCE-->
+<div id="lose">
+    <h1>YOU LOSE</h1>
+    <button onclick="goHome()">Back</button>
+</div>
+
+<script>
+let score = 0;
+let coin = 0;
+
+let streak = 0;
+let multiplier = 1;
+let paused = false;
+
+let skins = [
+    {name: "classic", cost:0}
+    {name:"butter", cost:100}
+    {name: "caramel", cost:250}
+    {name: "cheese", cost: 500}
+    {name: "barbecue", cost: 1000}
+    {name: "chocolate", cost: 1500}
+    {name: "cotton candy", cost: 2000}
+    {name: "radioactive", cost: 2500}
+    {name: "galaxy", cost: 3000}
+];
+
+let owned = ["classic"];
+let currentSkin = "classic";
+
+let activeKernels = [];
+
+const menu = document.getElementByID("menu");
+const game = document.getElementByID("game");
+const shop = document.getElementByID("shop");
+const info = document.getElementByID("info");
+const lose = document.getElementByID("lose");
+
+function swithScreens(s){
+    [menu,game,shop,info].forEach(x=>x.classList.remove("active"))
+    s.classList.add("active");
+}
+function updateUI(){
+    document.getElementById("score").textContent = score;
+    document.getElementByID("coins").textContent = coins;
+    document.getElementByID("menuCoins").textContent = coins;
+    document.getElementByID("shopCoins").textContent = coins;
+    document.getElementByID("comboUI").textContent = "Combo: x" + multiplier;
+}
+
+/*PAUSE*/
+function togglePause(){
+    paused = !paused;
+}
+
+function information(){
+    paused = !paused;
+    swithScreen(info);
+}
+/* ΝAVIGATING */
+function startGame(){
+    score=0;
+    streak=0;
+    multiplier=0;
+    updateUI();
+    switchScreen(game);
+    lose.style.displays="none";
+}
+
+function goHome(){
+    clearKernels();
+    switchScreen(menu);
+    lose.style.display="none";
+}
+
+function openInfo(){ swithScreen(info); }
+
+function openShop(){
+    renderShop();
+    swithScreen(shop);
+}
+
+/*SHOP*/
+function renderShop(){
+    const c=document.getElementByID("shopItems");
+    c.innerHTML="";
+
+    skins.forEach (s=>{
+        let b=document.createElement("button");
+
+        if(owned.includes(s.name)){
+            b.textContent=s.name+(currentSkin===s.name?" (Equipped)":"")
+        }else{
+            b.textContent=s.name+" - "+s.cost;
+        }
+        b.onclick=()=>{
+            if(!owned.includes(s.name)){
+                if(coins>=s.cost){
+                    coins-=s.cost;
+                    owned.push(s.name);
+                }else return alert("Not enough coins!");
+            }   
+                
+            
+                currentSkin = s.name;
+                updateUI();
+                renderShop();
+            };
+
+            c.appendChild(b)
+    });
+}
+function clearKernels(){
+    activeKernels.forEach(k=>k.remove());
+    activeKernels=[];
+}
+
+/*SPAWNING*/
+function spawnKernel(){
+    if(!game.classList.contains("active")||paused) return;
+
+    const k=document.createElement("div");
+    k.ClassName="kernel"
+
+    const r=Math.random();
+    let type="normal";
+
+    if (r<0.25) type="burnt";
+    else if (r<0.255) type="gold";
+
+    if (type==="burnt")k.classList.add("burnt");
+    else if (type === "gold")k.classList.add("gold");
+    else k.classList.add(currentSkin);
+
+    let x=150, y=window.innerHeight-150;
+    k.style.left=x+"px";
+    k.style.top=y+"px";
+
+    document.body.appendChild(k);
+    activeKernels.push(k);
+
+    let vx=1.5+Math.random()*2;
+    let vy=-8-Math.random()*4;
+    let g=0.15;
+    let clicked=false;
+
+    function loop(){
+        if(!paused){
+            x+=vx;
+            y+=vy;
+            vy+=g;
+
+            k.style.left=x+"px";
+            k.style.top=y+"px";
+
+            if(y>window.innerHeight || x>window.innerWidth){
+                if(!clicked && type!=="burnt"){
+                    streak=0;
+                    multiplier=1;
+                    updateUI();
+                }
+                k.remove()
+                return;
+            }
+        }
+        requestAnimationFrame(loop);
+    }
+    loop();
+
+    k.onclick=()=>{
+        clicked = true;
+
+        if(type==="burnt"){
+            lose.style.display="flex";
+            streak=0;
+            multiplier=1;
+            updateUI();
+            clearKernels();
+            return;
+        }
+        streak++;
+        multiplier=(streak>=2)?2:1;
+
+        let gaub=(type==="gold"?25:5)*multiplier;
+
+        score += gain;
+        coins += gain;
+
+        updateUI();
+
+        k.remove();
+    };
+}
+
+setInterval(spawnKernel, 900);
+
+</script>
+
+</body>
+</html>
