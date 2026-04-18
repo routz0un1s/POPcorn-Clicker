@@ -16,3 +16,7 @@ Missing following clicks resets combo
 The rare Gold kernels are worth 15 points.
 
 Have fun!
+
+-------------------
+ORIGINAL WORK
+DEBUGGED USING AI
