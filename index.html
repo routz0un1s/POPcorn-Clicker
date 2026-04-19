@@ -128,6 +128,11 @@ button {
 <div id="menu" class="screen active">
     <h1>POPcorn Clicker</h1>
     <div>Coins: <span id="menuCoins">0</span></div>
+<div style="margin-top:20px;">
+    <button onclick="startGame()">Play</button><br>
+    <button onclick="openShop()">Shop</button><br>
+    <button onclick="openInfo()">Info</button>
+</div>
 </div>
 
 <!--INFO-->
@@ -161,13 +166,12 @@ button {
 <!--GAME INTERFACE-->
 <div id="game" class="screen">
     <div id="gameUI">Score: <span id="score">0</span></div>
-    <div id="balanceUI">Coins total:<span id="coins"></spanid></div>
+    <div id="balanceUI">Coins total:<span id="coins"></span></div>
     <div id="comboUI">Combo: x1</div>
     
     <div id="controls">
         <button onclick="togglePause()">Pause</button>
         <button onclick="goHome()">Home</button>
-        <button onclick="information()">Rules</button>
     </div>
 
     <div id="machine"></div>
@@ -180,21 +184,21 @@ button {
 
 <script>
 let score = 0;
-let coin = 0;
+let coins = 0;
 
 let streak = 0;
 let multiplier = 1;
 let paused = false;
 
 let skins = [
-    {name: "classic", cost:0}
-    {name:"butter", cost:100}
-    {name: "caramel", cost:250}
-    {name: "cheese", cost: 500}
-    {name: "barbecue", cost: 1000}
-    {name: "chocolate", cost: 1500}
-    {name: "cotton candy", cost: 2000}
-    {name: "radioactive", cost: 2500}
+    {name: "classic", cost:0},
+    {name:"butter", cost:100},
+    {name: "caramel", cost:250},
+    {name: "cheese", cost: 500},
+    {name: "barbecue", cost: 1000},
+    {name: "chocolate", cost: 1500},
+    {name: "cotton candy", cost: 2000},
+    {name: "radioactive", cost: 2500},
     {name: "galaxy", cost: 3000}
 ];
 
@@ -203,22 +207,22 @@ let currentSkin = "classic";
 
 let activeKernels = [];
 
-const menu = document.getElementByID("menu");
-const game = document.getElementByID("game");
-const shop = document.getElementByID("shop");
-const info = document.getElementByID("info");
-const lose = document.getElementByID("lose");
+const menu = document.getElementById("menu");
+const game = document.getElementById("game");
+const shop = document.getElementById("shop");
+const info = document.getElementById("info");
+const lose = document.getElementById("lose");
 
-function swithScreens(s){
-    [menu,game,shop,info].forEach(x=>x.classList.remove("active"))
+function switchScreen(s){
+    [menu,game,shop,info].forEach(x=>x.classList.remove("active"));
     s.classList.add("active");
 }
 function updateUI(){
     document.getElementById("score").textContent = score;
-    document.getElementByID("coins").textContent = coins;
-    document.getElementByID("menuCoins").textContent = coins;
-    document.getElementByID("shopCoins").textContent = coins;
-    document.getElementByID("comboUI").textContent = "Combo: x" + multiplier;
+    document.getElementById("coins").textContent = coins;
+    document.getElementById("menuCoins").textContent = coins;
+    document.getElementById("shopCoins").textContent = coins;
+    document.getElementById("comboUI").textContent = "Combo: x" + multiplier;
 }
 
 /*PAUSE*/
@@ -226,18 +230,14 @@ function togglePause(){
     paused = !paused;
 }
 
-function information(){
-    paused = !paused;
-    swithScreen(info);
-}
 /* ΝAVIGATING */
 function startGame(){
     score=0;
     streak=0;
-    multiplier=0;
+    multiplier=1;
     updateUI();
     switchScreen(game);
-    lose.style.displays="none";
+    lose.style.display="none";
 }
 
 function goHome(){
@@ -246,16 +246,16 @@ function goHome(){
     lose.style.display="none";
 }
 
-function openInfo(){ swithScreen(info); }
+function openInfo(){ switchScreen(info); }
 
 function openShop(){
     renderShop();
-    swithScreen(shop);
+    switchScreen(shop);
 }
 
 /*SHOP*/
 function renderShop(){
-    const c=document.getElementByID("shopItems");
+    const c=document.getElementById("shopItems");
     c.innerHTML="";
 
     skins.forEach (s=>{
@@ -293,7 +293,7 @@ function spawnKernel(){
     if(!game.classList.contains("active")||paused) return;
 
     const k=document.createElement("div");
-    k.ClassName="kernel"
+    k.className="kernel";
 
     const r=Math.random();
     let type="normal";
@@ -354,7 +354,7 @@ function spawnKernel(){
         streak++;
         multiplier=(streak>=2)?2:1;
 
-        let gaub=(type==="gold"?25:5)*multiplier;
+        let gain=(type==="gold"?25:5)*multiplier;
 
         score += gain;
         coins += gain;
