@@ -20,3 +20,7 @@ Have fun!
 -------------------
 ORIGINAL WORK
 DEBUGGED USING AI
+
+-------------------
+
+CREATED FOR HACKCLUB'S FLAVORTOWN EVENT
